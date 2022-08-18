@@ -1,6 +1,7 @@
 from gettext import Catalog
-from flask import Flask
+from flask import Flask, request, abort
 import json
+import random
 from data import me, catalog
 
 
@@ -42,6 +43,28 @@ def about_api():
 @app.get("/api/catalog")
 def get_catalog():
   return json.dumps(catalog)
+
+@app.post("/api/catalog")
+def save_product():
+  product = request.get_json()
+  
+  if not "title" in product:
+    return abort(400, "ERROR: Title is required")
+
+  if len(product["title"]) < 5:
+    return abort(400, "ERROR: Title must have a max of 5 characters")
+
+  if not "price" in product:
+    return abort(400, "ERROR: Products must include a price.")
+
+  if product["price"] < 1:
+    return abort(400, "ERROR: Price should be greater or equal to 1")
+
+  product["_id"] = random.randint(100, 100000)
+
+  catalog.append(product)
+
+  return product
 
 @app.get("/api/product/<id>")
 def get_product_by_id(id):
@@ -88,5 +111,85 @@ def catalog_cheapest():
 
   return json.dumps(cheapest)
   
+
+
+
+
+# play rock, paper, scissors
+# /api/game/paper
+# return should be a dictionary (as json)
+# {
+#   "you": paper,
+#   "pc": rock,
+#   "winner": you
+# }
+
+# step 1: create endpoint return {"you": rock }
+
+@app.get("/api/game/<pick>")
+def game(pick):
+  
+  num = random.randint(0,2)
+  pc = ""
+  
+  if num == 0:
+    pc = "rock"
+
+  elif num == 1:
+    pc = "paper"
+
+  else:
+    pc = "scissors"
+
+  
+  winner = ""
+  if pick == "paper":
+    if pc == "rock":
+      winner = "you"
+    elif pc == "scissors":
+      winner = "pc"
+    else:
+      winner = "draw"
+  elif pick == "rock":
+    if pc == "rock":
+      winner = "draw"
+    elif pc == "paper":
+      winner = "pc"
+    else:
+      winner = "you"
+  elif pick == "scissors":
+    if pc == "rock":
+      winner = "pc"
+    elif pc == "paper":
+      winner = "you"
+    else:
+      winner = "draw"
+
+  
+  results = {
+    "you": pick,
+    "PC": pc,
+    "Winner": winner
+  }
+
+  return json.dumps(results)
+
+
+# step 2: generate a random number between 0 and 2
+# change the number to be rock, paper or scissors
+# return 
+# {
+#   "you": paper,
+#   "pc": rock,
+# }
+
+
+
+# step 3
+# finish the logic to pick the winner
+
+
+
+
 
 #app.run(debug=True)
